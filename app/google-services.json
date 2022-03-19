@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "64546570526",
+    "project_id": "foodieexpress-fa895",
+    "storage_bucket": "foodieexpress-fa895.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64546570526:android:a16181877e12c9d715890f",
+        "android_client_info": {
+          "package_name": "com.example.android.foodieexpress"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "64546570526-np0tt3m9cid1tj3f699ljq4bfoci372b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfvKxH8GZq2RiJIXX2onXo1erLjZPpnCY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "64546570526-np0tt3m9cid1tj3f699ljq4bfoci372b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
