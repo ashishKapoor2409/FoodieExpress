@@ -2,6 +2,7 @@ package com.example.android.foodieexpress
 
 import android.os.Bundle
 import android.view.Menu
+import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
@@ -11,11 +12,17 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.android.foodieexpress.EventBus.CategoryClick
+import com.example.android.foodieexpress.EventBus.FoodItemClick
 import com.example.android.foodieexpress.databinding.ActivityHomeBinding
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
+
     private lateinit var binding: ActivityHomeBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,5 +60,31 @@ class HomeActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_home)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        EventBus.getDefault().unregister(this)
+        super.onStop()
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onCategorySelected(event: CategoryClick) {
+        if(event.isSuccess) {
+            findNavController(R.id.nav_host_fragment_content_home).navigate(R.id.nav_food_list)
+            //Toast.makeText(this,"Click to"+event.category.name,Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onFoodSelected(event: FoodItemClick) {
+        if(event.isSuccess) {
+            findNavController(R.id.nav_host_fragment_content_home).navigate(R.id.nav_food_list)
+            //Toast.makeText(this,"Click to"+event.category.name,Toast.LENGTH_SHORT).show()
+        }
     }
 }
