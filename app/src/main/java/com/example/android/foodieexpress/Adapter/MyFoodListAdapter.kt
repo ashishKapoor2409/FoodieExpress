@@ -11,6 +11,7 @@ import com.bumptech.glide.Glide
 import com.example.android.foodieexpress.Callback.IRecyclerItemClickListener
 import com.example.android.foodieexpress.Common.Common
 import com.example.android.foodieexpress.EventBus.CategoryClick
+import com.example.android.foodieexpress.EventBus.FoodItemClick
 import com.example.android.foodieexpress.Model.CategoryModel
 import com.example.android.foodieexpress.Model.FoodModel
 import com.example.android.foodieexpress.R
@@ -72,9 +73,8 @@ class MyFoodListAdapter(internal var context: Context,
         holder.setListener(object :IRecyclerItemClickListener {
             override fun onItemClick(view: View, pos: Int) {
                 Common.foodSelected = foodList.get(pos)
+                EventBus.getDefault().postSticky(FoodItemClick(true, foodList.get(pos)))
             }
-
-
         })
 
     }
