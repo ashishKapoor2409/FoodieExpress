@@ -36,13 +36,14 @@
         android:id="@+id/btnCart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_baseline_shopping_cart_24"
         android:backgroundTint="@color/white"
+        android:tint="@color/black"
         android:elevation="6dp"
+        android:src="@drawable/ic_baseline_shopping_cart_24"
         app:layout_anchor="@id/app_bar_layout"
         app:layout_anchorGravity="bottom|right|end"
         app:pressedTranslationZ="12dp"
-        app:useCompatPadding="true"/>
+        app:useCompatPadding="true" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btn_rating"
@@ -52,11 +53,11 @@
         android:src="@drawable/ic_baseline_star_24"
         android:elevation="6dp"
         app:layout_anchor="@id/app_bar_layout"
-        app:layout_anchorGravity="bottom|right|end"
+        app:layout_anchorGravity="bottom|right|start"
         app:pressedTranslationZ="12dp"
         app:useCompatPadding="true"/>
 
-    <androidx.core.widget.NestedScrollView
+     <androidx.core.widget.NestedScrollView
         android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -113,12 +114,14 @@
                     </LinearLayout>
                     <com.cepheuen.elegantnumberbutton.view.ElegantNumberButton
                         android:id="@+id/number_button"
-                        android:layout_width="100dp"
-                        android:layout_height="30dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:layout_marginBottom="18dp"
                         android:layout_marginLeft="8dp"
                         android:layout_marginTop="8dp"
                         app:backGroundColor="@color/colorAccent"
+                        app:textColor="@color/white"
+                        android:foregroundTint="@color/white"
                         app:finalNumber="20"
                         app:initialNumber="1"
                         app:textSize="8sp" />
