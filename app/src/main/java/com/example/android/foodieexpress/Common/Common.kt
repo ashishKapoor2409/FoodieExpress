@@ -5,6 +5,7 @@ import com.example.android.foodieexpress.Model.FoodModel
 import com.example.android.foodieexpress.Model.UserModel
 
 object Common {
+    val COMMON_REF: String = "Comments"
     var foodSelected: FoodModel? = null
     var categorySelected: CategoryModel? = null
     val CATEGORY_REF: String = "Category"
