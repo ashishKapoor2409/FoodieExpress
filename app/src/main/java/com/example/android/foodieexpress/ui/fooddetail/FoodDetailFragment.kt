@@ -16,6 +16,7 @@ import com.example.android.foodieexpress.Common.Common
 import com.example.android.foodieexpress.Model.CommentModel
 import com.example.android.foodieexpress.Model.FoodModel
 import com.example.android.foodieexpress.R
+import com.example.android.foodieexpress.ui.comment.CommentFragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
@@ -142,7 +143,10 @@ class FoodDetailFragment : Fragment() {
         btnRating!!.setOnClickListener() {
             showDialogRating()
         }
-
+        btnShowComment!!.setOnClickListener() {
+            val commentFragment = CommentFragment.getInstance()
+            commentFragment.show(activity!!.supportFragmentManager,"Comment Fragment")
+        }
 
 
 
