@@ -28,4 +28,5 @@
         android:name="com.example.android.foodieexpress.ui.fooddetail.FoodDetailFragment"
         android:label="@string/menu_food_detail"
         tools:layout="@layout/fragment_food_detail" />
+
 </navigation>
