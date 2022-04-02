@@ -74,6 +74,9 @@ dependencies {
     implementation("com.github.andremion:counterfab:1.2.0")
 
     implementation("org.greenrobot:eventbus:3.3.1")
+
+    implementation("androidx.room:room-rxjava2:2.5.0-alpha01")
+    annotationProcessor("androidx.room:room-compiler:2.5.0-alpha01")
 //    implementation 'com.jakewharton:butterknife:10.2.3'
 //    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.3'
  }
