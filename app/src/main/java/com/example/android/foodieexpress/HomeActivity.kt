@@ -12,9 +12,19 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.andremion.counterfab.CounterFab
+import com.example.android.foodieexpress.Common.Common
+import com.example.android.foodieexpress.Database.CartDataSource
+import com.example.android.foodieexpress.Database.CartDatabase
+import com.example.android.foodieexpress.Database.LocalCartDataSource
 import com.example.android.foodieexpress.EventBus.CategoryClick
+import com.example.android.foodieexpress.EventBus.CountCartEvent
 import com.example.android.foodieexpress.EventBus.FoodItemClick
 import com.example.android.foodieexpress.databinding.ActivityHomeBinding
+import io.reactivex.SingleObserver
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -22,7 +32,8 @@ import org.greenrobot.eventbus.ThreadMode
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
-
+    private lateinit var cartDataSource: CartDataSource
+    private lateinit var fab:CounterFab
     private lateinit var binding: ActivityHomeBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +41,9 @@ class HomeActivity : AppCompatActivity() {
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        cartDataSource = LocalCartDataSource(CartDatabase.getInstance(this).cartDAO())
+
 
         setSupportActionBar(binding.appBarHome.toolbar)
 
@@ -49,8 +63,14 @@ class HomeActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+        fab = findViewById(R.id.fab)
+        countCartItem()
     }
 
+    override fun onResume() {
+        super.onResume()
+        countCartItem()
+    }
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.home, menu)
@@ -86,5 +106,34 @@ class HomeActivity : AppCompatActivity() {
             findNavController(R.id.nav_host_fragment_content_home).navigate(R.id.nav_food_detail)
             //Toast.makeText(this,"Click to"+event.category.name,Toast.LENGTH_SHORT).show()
         }
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onCountCartEvent(event: CountCartEvent) {
+        if(event.isSuccess) {
+            countCartItem()
+
+        }
+    }
+
+    private fun countCartItem() {
+        cartDataSource.countItemInCart(Common.currentUser!!.uid!!)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : SingleObserver<Int>{
+                override fun onSubscribe(d: Disposable) {
+
+                }
+
+                override fun onSuccess(t: Int) {
+                    fab.count = t
+                }
+
+                override fun onError(e: Throwable) {
+                    Toast.makeText(this@HomeActivity,"[COUNT CART]"+e.message,Toast.LENGTH_SHORT).show()
+
+                }
+
+            })
     }
 }
