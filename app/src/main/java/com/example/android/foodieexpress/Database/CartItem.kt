@@ -11,10 +11,13 @@ class CartItem {
     @PrimaryKey
     @NonNull
     @ColumnInfo(name="foodId")
-    var foodId:String?=""
+    var foodId:String =""
 
-    @ColumnInfo(name="Name")
+    @ColumnInfo(name="foodName")
     var foodName: String? = null
+
+    @ColumnInfo(name="foodImage")
+    var foodImage: String? = null
 
     @ColumnInfo(name = "foodPrice")
     var foodPrice: Double? = 0.0
@@ -24,6 +27,12 @@ class CartItem {
 
     @ColumnInfo(name = "foodAddOn")
     var foodAddOn: String? = ""
+
+    @ColumnInfo(name = "foodSize")
+    var foodSize: String? = ""
+
+    @ColumnInfo(name = "userPhone")
+    var userPhone: String? = ""
 
     @ColumnInfo(name = "foodExtraPrice")
     var foodExtraPrice: Double = 0.0
