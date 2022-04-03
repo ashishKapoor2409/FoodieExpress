@@ -1,8 +1,6 @@
 package com.example.android.foodieexpress.Common
 
-import com.example.android.foodieexpress.Model.CategoryModel
-import com.example.android.foodieexpress.Model.FoodModel
-import com.example.android.foodieexpress.Model.UserModel
+import com.example.android.foodieexpress.Model.*
 import java.lang.StringBuilder
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -16,6 +14,31 @@ object Common {
             return finalPrice.replace(".",",")
         } else
             return "0,00"
+
+    }
+
+    fun calculateExtraPrice(userSelectedSize: SizeModel?,
+                            userSelectedAddOn: MutableList<AddonModel>?
+    ): Double {
+
+        var result:Double = 0.0
+        if(userSelectedSize == null && userSelectedAddOn == null)
+            return 0.0
+        else if(userSelectedSize == null) {
+            for(addOnModel in userSelectedAddOn!!)
+                result+= addOnModel.price!!.toDouble()
+            return result
+        }
+        else if(userSelectedAddOn == null) {
+            result = userSelectedSize!!.price.toDouble()
+            return result
+        } else
+        {
+            result = userSelectedSize!!.price.toDouble()
+            for(addOnModel in userSelectedAddOn!!)
+                result+= addOnModel.price!!.toDouble()
+            return result
+        }
 
     }
 
