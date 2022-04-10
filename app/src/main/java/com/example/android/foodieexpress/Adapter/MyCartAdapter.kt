@@ -75,4 +75,9 @@ class MyCartAdapter(internal var context: Context,
     override fun getItemCount(): Int {
         return cartItems.size
     }
+
+    fun getItemAtPosition(pos: Int): CartItem {
+        return cartItems[pos]
+
+    }
 }
