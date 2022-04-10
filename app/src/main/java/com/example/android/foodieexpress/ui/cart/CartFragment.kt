@@ -127,7 +127,7 @@ class CartFragment: Fragment() {
 
                     override fun onSuccess(t: Int) {
                         calculateTotalPrice()
-                        //recycler_cart!!.layoutManager!!.onRestoreInstanceState(recyclerViewState)
+                        recycler_cart!!.layoutManager!!.onRestoreInstanceState(recyclerViewState)
 
                     }
 
