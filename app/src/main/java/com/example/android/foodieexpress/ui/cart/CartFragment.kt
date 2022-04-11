@@ -1,11 +1,11 @@
 package com.example.android.foodieexpress.ui.cart
 
+import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.*
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -24,7 +24,7 @@ import com.example.android.foodieexpress.EventBus.CountCartEvent
 import com.example.android.foodieexpress.EventBus.HideFABCart
 import com.example.android.foodieexpress.EventBus.UpdateItemInCart
 import com.example.android.foodieexpress.R
-import com.example.android.foodieexpress.ui.fooddetail.FoodDetailViewModel
+import com.google.android.material.button.MaterialButton
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -33,22 +33,20 @@ import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import org.w3c.dom.Comment
-import org.w3c.dom.Text
-import java.lang.StringBuilder
 
-class CartFragment: Fragment() {
+class CartFragment : Fragment() {
 
     private var cartDataSource: CartDataSource? = null
     private var compositeDisposable: CompositeDisposable = CompositeDisposable()
     private var recyclerViewState: Parcelable? = null
     private lateinit var cartViewModel: CartViewModel
+    private lateinit var btn_place_order:Button
 
     var txt_empty_cart: TextView? = null
     var txt_total_price: TextView? = null
     var group_place_holder: CardView? = null
     var recycler_cart: RecyclerView? = null
-    var adapter:MyCartAdapter? = null
+    var adapter: MyCartAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -96,41 +94,51 @@ class CartFragment: Fragment() {
         recycler_cart!!.layoutManager = layoutManager
         recycler_cart!!.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
 
-        val swipe = object : MySwipeHelper(context!!,recycler_cart!!,200) {
+        val swipe = object : MySwipeHelper(context!!, recycler_cart!!, 200) {
             override fun instantiateMyButton(
                 viewHolder: RecyclerView.ViewHolder,
                 buffer: MutableList<MyButton>
             ) {
-                buffer.add(MyButton(context!!,
-                "Delete",
-                30,
-                0,
-                Color.parseColor("#FF3C30"),
-                object :IMyButtonCallback{
-                    override fun onClick(pos: Int) {
-                        val deleteItem = adapter!!.getItemAtPosition(pos)
-                        cartDataSource!!.deleteCart(deleteItem)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe (object :SingleObserver<Int> {
-                                override fun onSubscribe(d: Disposable) {
+                buffer.add(
+                    MyButton(context!!,
+                        "Delete",
+                        30,
+                        0,
+                        Color.parseColor("#FF3C30"),
+                        object : IMyButtonCallback {
+                            override fun onClick(pos: Int) {
+                                val deleteItem = adapter!!.getItemAtPosition(pos)
+                                cartDataSource!!.deleteCart(deleteItem)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe(object : SingleObserver<Int> {
+                                        override fun onSubscribe(d: Disposable) {
 
-                                }
+                                        }
 
-                                override fun onSuccess(t: Int) {
-                                    adapter!!.notifyItemRemoved(pos)
-                                    sumCart()
-                                    EventBus.getDefault().postSticky(CountCartEvent(true))
-                                    Toast.makeText(context,"Delete item success",Toast.LENGTH_SHORT).show()
-                                }
+                                        override fun onSuccess(t: Int) {
+                                            adapter!!.notifyItemRemoved(pos)
+                                            sumCart()
+                                            EventBus.getDefault().postSticky(CountCartEvent(true))
+                                            Toast.makeText(
+                                                context,
+                                                "Delete item success",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
 
-                                override fun onError(e: Throwable) {
-                                    Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()
-                                }
+                                        override fun onError(e: Throwable) {
+                                            Toast.makeText(
+                                                context,
+                                                "" + e.message,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
 
-                            })
-                    }
-                }))
+                                    })
+                            }
+                        })
+                )
             }
 
         }
@@ -138,6 +146,49 @@ class CartFragment: Fragment() {
         txt_empty_cart = root.findViewById(R.id.txt_empty_cart) as TextView
         txt_total_price = root.findViewById(R.id.txt_total_price) as TextView
         group_place_holder = root.findViewById(R.id.group_place_holder) as CardView
+        btn_place_order = root.findViewById(R.id.btn_place_order) as Button
+        btn_place_order!!.setOnClickListener {
+            val builder = AlertDialog.Builder(context!!)
+            builder.setTitle("One more step!!")
+            val view = LayoutInflater.from(context).inflate(R.layout.layout_place_order, null)
+            val edt_address = view.findViewById<View>(R.id.edt_address) as EditText
+            val rdi_home = view.findViewById<View>(R.id.rdi_home_address) as RadioButton
+            val rdi_other_address = view.findViewById<View>(R.id.rdi_other_address) as RadioButton
+            val rdi_ship_to_this_address = view.findViewById<View>(R.id.rdi_ship_this_address) as RadioButton
+            val rdi_cod = view.findViewById<View>(R.id.rdi_cod) as RadioButton
+            val rdi_braintree = view.findViewById<View>(R.id.rdi_braintree) as RadioButton
+
+            edt_address.setText(Common.currentUser!!.address)
+
+            rdi_home.setOnCheckedChangeListener { compundButton, b ->
+                if (b) {
+                    edt_address.setText(Common.currentUser!!.address)
+                }
+            }
+
+            rdi_other_address.setOnCheckedChangeListener { compundButton, b ->
+                if (b) {
+                    edt_address.setText("")
+                    edt_address.setHint("Enter your address")
+                }
+            }
+
+            rdi_ship_to_this_address.setOnCheckedChangeListener { compundButton, b ->
+                if (b) {
+                    Toast.makeText(context!!,"Implement late with Google API",Toast.LENGTH_SHORT ).show()
+                }
+            }
+
+            builder.setView(view)
+            builder.setNegativeButton("NO", {dialogInterface,_ ->dialogInterface.dismiss() })
+                .setPositiveButton("YES",{dialogInterface,_->
+                    Toast.makeText(context!!,"Implement late ",Toast.LENGTH_SHORT).show()})
+
+            val dialog = builder.create()
+            dialog.show()
+
+
+        }
 
 
     }
@@ -146,18 +197,18 @@ class CartFragment: Fragment() {
         cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : SingleObserver<Double>{
+            .subscribe(object : SingleObserver<Double> {
                 override fun onSubscribe(d: Disposable) {
                 }
 
                 override fun onSuccess(t: Double) {
-                    txt_total_price!!.text = StringBuilder("Total: ")
+                    txt_total_price!!.text = StringBuilder("Total: $")
                         .append(t)
                 }
 
                 override fun onError(e: Throwable) {
-                    if(!e.message!!.contains("Query Returned Empty"))
-                        Toast.makeText(context,""+e.message!!,Toast.LENGTH_SHORT).show()
+                    if (!e.message!!.contains("Query Returned Empty"))
+                        Toast.makeText(context, "" + e.message!!, Toast.LENGTH_SHORT).show()
                 }
 
             })
@@ -170,7 +221,7 @@ class CartFragment: Fragment() {
     }
 
     override fun onStop() {
-        cartViewModel!!.onStop()
+        cartViewModel.onStop()
         compositeDisposable.clear()
         EventBus.getDefault().postSticky(HideFABCart(false))
         if (EventBus.getDefault().isRegistered(this))
@@ -215,29 +266,29 @@ class CartFragment: Fragment() {
                 }
 
                 override fun onSuccess(price: Double) {
-                    txt_total_price!!.text = StringBuilder("Total:")
+                    txt_total_price!!.text = StringBuilder("Total: $")
                         .append(Common.formatPrice(price))
                 }
 
                 override fun onError(e: Throwable) {
-                    if(!e.message!!.contains("Query returned empty"))
+                    if (!e.message!!.contains("Query returned empty"))
                         Toast.makeText(context, "[SUM CART]" + e.message, Toast.LENGTH_SHORT).show()
                 }
             })
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
-        menu!!.findItem(R.id.action_settings).setVisible(false)
+        menu.findItem(R.id.action_settings).isVisible = false
         super.onPrepareOptionsMenu(menu)
     }
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.cart_menu,menu)
+        inflater.inflate(R.menu.cart_menu, menu)
         super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if(item!!.itemId == R.id.action_clear_cart)
-        {
+        if (item.itemId == R.id.action_clear_cart) {
             cartDataSource!!.cleanCart(Common.currentUser!!.uid!!)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -247,12 +298,12 @@ class CartFragment: Fragment() {
                     }
 
                     override fun onSuccess(t: Int) {
-                        Toast.makeText(context,"Clear Cart Success",Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Clear Cart Success", Toast.LENGTH_SHORT).show()
                         EventBus.getDefault().postSticky(CountCartEvent(true))
                     }
 
                     override fun onError(e: Throwable) {
-                        Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "" + e.message, Toast.LENGTH_SHORT).show()
                     }
 
                 })
