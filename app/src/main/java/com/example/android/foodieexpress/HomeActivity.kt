@@ -198,6 +198,7 @@ class HomeActivity : AppCompatActivity() {
                     override fun onDataChange(p0: DataSnapshot) {
                         if(p0.exists()) {
                             Common.categorySelected = p0.getValue(CategoryModel::class.java)
+                            Common.categorySelected!!.menu_id = p0.key
 
                             FirebaseDatabase.getInstance()
                                 .getReference("Category")
@@ -209,8 +210,10 @@ class HomeActivity : AppCompatActivity() {
                                 .addListenerForSingleValueEvent(object : ValueEventListener{
                                     override fun onDataChange(p0: DataSnapshot) {
                                         if(p0.exists()) {
-                                            for(foodSnapShot in p0.children)
+                                            for(foodSnapShot in p0.children) {
                                                 Common.foodSelected = foodSnapShot.getValue(FoodModel::class.java)
+                                                Common.foodSelected!!.key = foodSnapShot.key
+                                            }
                                             navController!!.navigate(R.id.nav_food_detail)
                                         } else {
                                             Toast.makeText(this@HomeActivity,"Item doesn't exists", Toast.LENGTH_SHORT).show()
@@ -249,6 +252,7 @@ class HomeActivity : AppCompatActivity() {
                     override fun onDataChange(p0: DataSnapshot) {
                         if(p0.exists()) {
                             Common.categorySelected = p0.getValue(CategoryModel::class.java)
+                            Common.categorySelected!!.menu_id = p0.key
 
                             FirebaseDatabase.getInstance()
                                 .getReference("Category")
@@ -260,8 +264,11 @@ class HomeActivity : AppCompatActivity() {
                                 .addListenerForSingleValueEvent(object : ValueEventListener{
                                     override fun onDataChange(p0: DataSnapshot) {
                                         if(p0.exists()) {
-                                            for(foodSnapShot in p0.children)
-                                                Common.foodSelected = foodSnapShot.getValue(FoodModel::class.java)
+                                            for(foodSnapShot in p0.children) {
+                                                Common.foodSelected =
+                                                    foodSnapShot.getValue(FoodModel::class.java)
+                                                Common.foodSelected!!.key = foodSnapShot.key
+                                            }
                                             navController!!.navigate(R.id.nav_food_detail)
                                         } else {
                                             Toast.makeText(this@HomeActivity,"Item doesn't exists", Toast.LENGTH_SHORT).show()
