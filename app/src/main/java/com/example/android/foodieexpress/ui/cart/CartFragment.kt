@@ -1,12 +1,20 @@
 package com.example.android.foodieexpress.ui.cart
 
+import android.Manifest
 import android.app.AlertDialog
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.location.Location
+import android.location.LocationRequest
 import android.os.Bundle
+import android.os.Looper
 import android.os.Parcelable
 import android.view.*
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -24,6 +32,11 @@ import com.example.android.foodieexpress.EventBus.CountCartEvent
 import com.example.android.foodieexpress.EventBus.HideFABCart
 import com.example.android.foodieexpress.EventBus.UpdateItemInCart
 import com.example.android.foodieexpress.R
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.google.android.material.button.MaterialButton
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -42,11 +55,33 @@ class CartFragment : Fragment() {
     private lateinit var cartViewModel: CartViewModel
     private lateinit var btn_place_order:Button
 
+    private lateinit var locationRequest:com.google.android.gms.location.LocationRequest
+    private lateinit var locationCallback: LocationCallback
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var currentLocation: Location
+
     var txt_empty_cart: TextView? = null
     var txt_total_price: TextView? = null
     var group_place_holder: CardView? = null
     var recycler_cart: RecyclerView? = null
     var adapter: MyCartAdapter? = null
+
+    val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permission is granted. Continue the action or workflow in your
+                // app.
+            } else {
+                // Explain to the user that the feature is unavailable because the
+                // features requires a permission that the user has denied. At the
+                // same time, respect the user's decision. Don't link to system
+                // settings in an effort to convince the user to change their
+                // decision.
+            }
+        }
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -61,6 +96,7 @@ class CartFragment : Fragment() {
         cartViewModel.initCartDataSource(context!!)
         val root: View = inflater.inflate(R.layout.fragment_cart, container, false)
         initViews(root)
+        initLocation()
         cartViewModel.getMutableLiveDataCartItem().observe(this, Observer {
             if (it == null || it.isEmpty()) {
                 recycler_cart!!.visibility = View.GONE
@@ -79,9 +115,64 @@ class CartFragment : Fragment() {
         return root
     }
 
+    private fun initLocation() {
+        buildLocationRequest()
+        buildLocationCallback()
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context!!)
+
+        if(ContextCompat.checkSelfPermission(
+                context!!,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationProviderClient!!.requestLocationUpdates(locationRequest,locationCallback,
+                Looper.getMainLooper())
+        }
+        else {
+
+            // You can directly ask for the permission.
+            // The registered ActivityResultCallback gets the result of this request.
+            requestPermissionLauncher.launch(
+                Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    private fun buildLocationCallback() {
+        locationCallback = object: LocationCallback() {
+            override fun onLocationResult(p0: LocationResult) {
+                super.onLocationResult(p0)
+                currentLocation = p0!!.lastLocation
+            }
+
+        }
+    }
+
+    private fun buildLocationRequest() {
+        locationRequest = com.google.android.gms.location.LocationRequest()
+        locationRequest.setPriority(com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY)
+        locationRequest.setFastestInterval(3000)
+        locationRequest.setSmallestDisplacement(10f)
+
+    }
+
     override fun onResume() {
         super.onResume()
         calculateTotalPrice()
+        if(ContextCompat.checkSelfPermission(
+                context!!,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED) {
+            if(fusedLocationProviderClient!=null){
+                fusedLocationProviderClient.requestLocationUpdates(locationRequest,locationCallback,
+                    Looper.getMainLooper())
+            }
+                }
+        else {
+
+            // You can directly ask for the permission.
+            // The registered ActivityResultCallback gets the result of this request.
+            requestPermissionLauncher.launch(
+                Manifest.permission.ACCESS_FINE_LOCATION)
+        }
     }
 
     private fun initViews(root: View) {
@@ -152,6 +243,8 @@ class CartFragment : Fragment() {
             builder.setTitle("One more step!!")
             val view = LayoutInflater.from(context).inflate(R.layout.layout_place_order, null)
             val edt_address = view.findViewById<View>(R.id.edt_address) as EditText
+            val edt_comment = view.findViewById<View>(R.id.edt_comment) as EditText
+            val txt_address = view.findViewById<View>(R.id.txt_address_detail) as TextView
             val rdi_home = view.findViewById<View>(R.id.rdi_home_address) as RadioButton
             val rdi_other_address = view.findViewById<View>(R.id.rdi_other_address) as RadioButton
             val rdi_ship_to_this_address = view.findViewById<View>(R.id.rdi_ship_this_address) as RadioButton
@@ -163,6 +256,7 @@ class CartFragment : Fragment() {
             rdi_home.setOnCheckedChangeListener { compundButton, b ->
                 if (b) {
                     edt_address.setText(Common.currentUser!!.address)
+                    txt_address.visibility = View.GONE
                 }
             }
 
@@ -170,12 +264,41 @@ class CartFragment : Fragment() {
                 if (b) {
                     edt_address.setText("")
                     edt_address.setHint("Enter your address")
+                    txt_address.visibility = View.GONE
                 }
             }
 
             rdi_ship_to_this_address.setOnCheckedChangeListener { compundButton, b ->
                 if (b) {
-                    Toast.makeText(context!!,"Implement late with Google API",Toast.LENGTH_SHORT ).show()
+                    if(ContextCompat.checkSelfPermission(
+                        context!!,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED) {
+                        fusedLocationProviderClient!!.lastLocation
+                            .addOnFailureListener{e->
+                                txt_address.visibility = View.GONE
+                                Toast.makeText(context!!,""+e.message,
+                                    Toast.LENGTH_SHORT).show()}
+                            .addOnCompleteListener{
+                                    task->
+                                val coordinates = java.lang.StringBuilder()
+                                    .append(task.result!!.latitude)
+                                    .append("/")
+                                    .append(task.result!!.longitude)
+                                    .toString()
+
+                                edt_address.setText(coordinates)
+                                txt_address.visibility = View.VISIBLE
+                                txt_address.setText("Implement late wih Google API")
+
+                            }
+                    } else {
+
+                        // You can directly ask for the permission.
+                        // The registered ActivityResultCallback gets the result of this request.
+                        requestPermissionLauncher.launch(
+                            Manifest.permission.ACCESS_FINE_LOCATION)
+                    }
                 }
             }
 
@@ -226,6 +349,8 @@ class CartFragment : Fragment() {
         EventBus.getDefault().postSticky(HideFABCart(false))
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
+        if(fusedLocationProviderClient!=null)
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
         super.onStop()
     }
 
