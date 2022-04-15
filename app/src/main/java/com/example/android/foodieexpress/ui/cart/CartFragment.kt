@@ -374,6 +374,7 @@ class CartFragment : Fragment() {
                             order.discount = 0
                             order.isCod = true
                             order.transactionId = "Cash on Delivery"
+                            order.orderStatus = 0
 
                             writeOrderToFirebase(order)
                         }

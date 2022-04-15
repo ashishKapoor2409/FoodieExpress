@@ -16,6 +16,9 @@ class Order {
     var isCod:Boolean = false
     var discount: Int= 0
     var cartItemList:List<CartItem>? = null
+    var createDate:Long = 0
+    var orderNumber: String? =null
+    var orderStatus: Int = 0
 
 
 }
