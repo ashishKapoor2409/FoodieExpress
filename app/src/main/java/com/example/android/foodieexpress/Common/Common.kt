@@ -10,6 +10,7 @@ import com.example.android.foodieexpress.Model.*
 import java.lang.StringBuilder
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.util.*
 
 object Common {
     fun formatPrice(price: Double): String {
@@ -59,6 +60,13 @@ object Common {
         txtUser!!.setText(builder,TextView.BufferType.SPANNABLE)
     }
 
+    fun createOrderNumber(): String {
+        return StringBuilder().append(System.currentTimeMillis())
+            .append(Math.abs(Random().nextInt()))
+            .toString()
+    }
+
+    val ORDER_REF: String = "Order"
     val COMMON_REF: String = "Comments"
     var foodSelected: FoodModel? = null
     var categorySelected: CategoryModel? = null
