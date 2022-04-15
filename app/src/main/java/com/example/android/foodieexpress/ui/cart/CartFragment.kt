@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Index
 import com.example.android.foodieexpress.Adapter.MyCartAdapter
 import com.example.android.foodieexpress.Callback.IMyButtonCallback
 import com.example.android.foodieexpress.Common.Common
@@ -32,6 +33,7 @@ import com.example.android.foodieexpress.Database.LocalCartDataSource
 import com.example.android.foodieexpress.EventBus.CountCartEvent
 import com.example.android.foodieexpress.EventBus.HideFABCart
 import com.example.android.foodieexpress.EventBus.UpdateItemInCart
+import com.example.android.foodieexpress.Model.Order
 import com.example.android.foodieexpress.R
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -39,6 +41,7 @@ import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.button.MaterialButton
+import com.google.firebase.database.FirebaseDatabase
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -326,7 +329,9 @@ class CartFragment : Fragment() {
             builder.setView(view)
             builder.setNegativeButton("NO", {dialogInterface,_ ->dialogInterface.dismiss() })
                 .setPositiveButton("YES",{dialogInterface,_->
-                    Toast.makeText(context!!,"Implement late ",Toast.LENGTH_SHORT).show()})
+                    if(rdi_cod.isChecked)
+                        paymentCOD(edt_address.text.toString(),edt_comment.text.toString())
+                })
 
             val dialog = builder.create()
             dialog.show()
@@ -334,6 +339,82 @@ class CartFragment : Fragment() {
 
         }
 
+
+    }
+
+    private fun paymentCOD(address: String, comment: String) {
+        compositeDisposable.add(cartDataSource!!.getAllCart(Common.currentUser!!.uid!!)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe( { cartItemList ->
+                //When we have all cart items we will get total cart price
+                cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(object : SingleObserver<Double>{
+                        override fun onSubscribe(d: Disposable) {
+                        }
+
+                        override fun onSuccess(totalPrice: Double) {
+                            val finalPrice = totalPrice
+                            val order = Order()
+                            order.userId = Common.currentUser!!.uid!!
+                            order.userName = Common.currentUser!!.name!!
+                            order.userPhone = Common.currentUser!!.phone!!
+                            order.shippingAddress = address
+                            order.comment = comment
+                            if(currentLocation != null) {
+                                order.lat = currentLocation!!.latitude
+                                order.lng = currentLocation!!.longitude
+
+                            }
+                            order.cartItemList = cartItemList
+                            order.totalPayment = totalPrice
+                            order.finalPayment = finalPrice
+                            order.discount = 0
+                            order.isCod = true
+                            order.transactionId = "Cash on Delivery"
+
+                            writeOrderToFirebase(order)
+                        }
+
+                        override fun onError(e: Throwable) {
+                            Toast.makeText(context!!,""+e.message,Toast.LENGTH_SHORT).show()
+                        }
+
+                    })
+            },{throwable -> Toast.makeText(context!!,""+throwable.message,Toast.LENGTH_SHORT).show()}))
+
+    }
+
+    private fun writeOrderToFirebase(order: Order) {
+        FirebaseDatabase.getInstance()
+            .getReference(Common.ORDER_REF)
+            .child(Common.createOrderNumber())
+            .setValue(order)
+            .addOnFailureListener {
+                e->Toast.makeText(context!!,""+e.message,Toast.LENGTH_SHORT).show()
+            }
+            .addOnCompleteListener{task->
+                if(task.isSuccessful) {
+                    cartDataSource!!.cleanCart(Common.currentUser!!.uid!!)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(object : SingleObserver<Int>{
+                            override fun onSubscribe(d: Disposable) {
+                            }
+
+                            override fun onSuccess(t: Int) {
+                                Toast.makeText(context!!,"Order Placed Successfully",Toast.LENGTH_SHORT).show()
+                            }
+
+                            override fun onError(e: Throwable) {
+                                Toast.makeText(context!!,""+e.message,Toast.LENGTH_SHORT).show()
+                            }
+
+                        })
+                }
+            }
 
     }
 
