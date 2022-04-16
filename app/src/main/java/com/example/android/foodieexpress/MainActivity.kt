@@ -17,6 +17,7 @@ import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.google.firebase.messaging.FirebaseMessaging
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
@@ -164,8 +165,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun goToHomeActivity(userModel: UserModel?) {
-        Common.currentUser = userModel!!
-        startActivity(Intent(this@MainActivity,HomeActivity::class.java))
+        FirebaseMessaging.getInstance().token
+            .addOnFailureListener{ e-> Toast.makeText(this@MainActivity,""+e.message, Toast.LENGTH_SHORT).show()
+                Common.currentUser = userModel!!
+                startActivity(Intent(this@MainActivity,HomeActivity::class.java))
+                finish()
+            }
+            .addOnCompleteListener{ task ->
+                if(task.isSuccessful) {
+                    Common.currentUser = userModel!!
+                    Common.updateToken(this@MainActivity, task.result)
+                    startActivity(Intent(this@MainActivity,HomeActivity::class.java))
+                    finish()
+                }
+            }
+
+
     }
 
     private fun phoneLogin() {

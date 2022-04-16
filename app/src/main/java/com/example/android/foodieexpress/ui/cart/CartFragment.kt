@@ -32,6 +32,7 @@ import com.example.android.foodieexpress.Database.CartDatabase
 import com.example.android.foodieexpress.Database.LocalCartDataSource
 import com.example.android.foodieexpress.EventBus.CountCartEvent
 import com.example.android.foodieexpress.EventBus.HideFABCart
+import com.example.android.foodieexpress.EventBus.MenuItemBack
 import com.example.android.foodieexpress.EventBus.UpdateItemInCart
 import com.example.android.foodieexpress.Model.Order
 import com.example.android.foodieexpress.R
@@ -97,6 +98,7 @@ class CartFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
+        setHasOptionsMenu(true)
         EventBus.getDefault().postSticky(HideFABCart(true))
         cartViewModel =
             ViewModelProvider(this).get(CartViewModel::class.java)
@@ -556,5 +558,10 @@ class CartFragment : Fragment() {
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 }

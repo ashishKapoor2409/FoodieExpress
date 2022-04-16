@@ -20,6 +20,7 @@ import com.example.android.foodieexpress.Database.CartDatabase
 import com.example.android.foodieexpress.Database.CartItem
 import com.example.android.foodieexpress.Database.LocalCartDataSource
 import com.example.android.foodieexpress.EventBus.CountCartEvent
+import com.example.android.foodieexpress.EventBus.MenuItemBack
 import com.example.android.foodieexpress.Model.CommentModel
 import com.example.android.foodieexpress.Model.FoodModel
 import com.example.android.foodieexpress.R
@@ -437,5 +438,10 @@ class FoodDetailFragment : Fragment(), TextWatcher {
 
     override fun afterTextChanged(p0: Editable?) {
         TODO("Not yet implemented")
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 }

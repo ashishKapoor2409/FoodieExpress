@@ -18,8 +18,10 @@ import com.example.android.foodieexpress.Adapter.MyBestDealsAdapter
 import com.example.android.foodieexpress.Adapter.MyCategoriesAdapter
 import com.example.android.foodieexpress.Common.Common
 import com.example.android.foodieexpress.Common.SpacesItemDecoration
+import com.example.android.foodieexpress.EventBus.MenuItemBack
 import com.example.android.foodieexpress.R
 import dmax.dialog.SpotsDialog
+import org.greenrobot.eventbus.EventBus
 
 class MenuFragment : Fragment() {
 
@@ -84,5 +86,10 @@ class MenuFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 }
