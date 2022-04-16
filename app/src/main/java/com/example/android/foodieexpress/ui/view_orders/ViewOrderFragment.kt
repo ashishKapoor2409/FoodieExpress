@@ -17,6 +17,7 @@ import com.example.android.foodieexpress.Model.Order
 import butterknife.Unbinder
 import com.example.android.foodieexpress.Adapter.MyOrderAdapter
 import com.example.android.foodieexpress.Common.Common
+import com.example.android.foodieexpress.EventBus.MenuItemBack
 import com.example.android.foodieexpress.R
 import com.example.android.foodieexpress.ui.menu.MenuViewModel
 import com.google.firebase.database.DataSnapshot
@@ -24,6 +25,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import dmax.dialog.SpotsDialog
+import org.greenrobot.eventbus.EventBus
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -107,6 +109,11 @@ class ViewOrderFragment: Fragment(), ILoadOrderCallbackListener {
     override fun onLoadOrderFailed(message: String) {
         dialog.dismiss()
         Toast.makeText(context!!, message,Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 
 }
