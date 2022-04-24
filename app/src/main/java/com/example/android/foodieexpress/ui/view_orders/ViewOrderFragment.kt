@@ -13,13 +13,11 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.foodieexpress.Callback.ILoadOrderCallbackListener
-import com.example.android.foodieexpress.Model.Order
-import butterknife.Unbinder
+import com.example.android.foodieexpress.Model.OrderModel
 import com.example.android.foodieexpress.Adapter.MyOrderAdapter
 import com.example.android.foodieexpress.Common.Common
 import com.example.android.foodieexpress.EventBus.MenuItemBack
 import com.example.android.foodieexpress.R
-import com.example.android.foodieexpress.ui.menu.MenuViewModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -53,7 +51,7 @@ class ViewOrderFragment: Fragment(), ILoadOrderCallbackListener {
         val root = inflater.inflate(R.layout.fragment_view_orders,container,false)
         initViews(root)
         loadOrderFromFirebase()
-        viewOrderModel!!.mutableLiveDataOrderList.observe(this, Observer {
+        viewOrderModel!!.mutableLiveDataOrderModelList.observe(this, Observer {
             Collections.reverse(it!!)
             val adapter = MyOrderAdapter(context!!,it!!)
             recycler_order!!.adapter = adapter
@@ -63,7 +61,7 @@ class ViewOrderFragment: Fragment(), ILoadOrderCallbackListener {
 
     private fun loadOrderFromFirebase() {
         dialog.show()
-        val orderList = ArrayList<Order>()
+        val orderList = ArrayList<OrderModel>()
 
         FirebaseDatabase.getInstance().getReference(Common.ORDER_REF)
             .orderByChild("userId")
@@ -73,7 +71,7 @@ class ViewOrderFragment: Fragment(), ILoadOrderCallbackListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for(orderSnapShot in snapshot.children)
                     {
-                        val order = orderSnapShot.getValue(Order::class.java)
+                        val order = orderSnapShot.getValue(OrderModel::class.java)
                         order!!.orderNumber = orderSnapShot.key
                         orderList.add(order!!)
                     }
@@ -101,9 +99,9 @@ class ViewOrderFragment: Fragment(), ILoadOrderCallbackListener {
 
     }
 
-    override fun onLoadOrderSuccess(orderList: List<Order>) {
+    override fun onLoadOrderSuccess(orderModelList: List<OrderModel>) {
         dialog.dismiss()
-        viewOrderModel!!.setMutableLiveDataOrderList(orderList)
+        viewOrderModel!!.setMutableLiveDataOrderList(orderModelList)
     }
 
     override fun onLoadOrderFailed(message: String) {

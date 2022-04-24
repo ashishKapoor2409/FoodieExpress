@@ -2,7 +2,7 @@ package com.example.android.foodieexpress.Model
 
 import com.example.android.foodieexpress.Database.CartItem
 
-class Order {
+class OrderModel {
     var userId: String? = null
     var userName:String?= null
     var userPhone: String?=null

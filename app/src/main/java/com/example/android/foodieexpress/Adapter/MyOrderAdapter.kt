@@ -9,14 +9,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.android.foodieexpress.Common.Common
-import com.example.android.foodieexpress.Model.Order
+import com.example.android.foodieexpress.Model.OrderModel
 import com.example.android.foodieexpress.R
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 
 class MyOrderAdapter(private val context: Context,
-private val orderList:List<Order>) :
+private val orderModelList:List<OrderModel>) :
 RecyclerView.Adapter<MyOrderAdapter.MyViewHolder>(){
 
 
@@ -47,7 +47,7 @@ RecyclerView.Adapter<MyOrderAdapter.MyViewHolder>(){
 
 
     override fun getItemCount(): Int {
-        return orderList.size
+        return orderModelList.size
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -57,16 +57,16 @@ RecyclerView.Adapter<MyOrderAdapter.MyViewHolder>(){
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         Glide.with(context!!)
-            .load(orderList[position].cartItemList!![0].foodImage)
+            .load(orderModelList[position].cartItemList!![0].foodImage)
             .into(holder.img_order!!)
-        calendar.timeInMillis = orderList[position].createDate
-        val date = Date(orderList[position].createDate)
+        calendar.timeInMillis = orderModelList[position].createDate
+        val date = Date(orderModelList[position].createDate)
         holder.txt_order_date!!.text = StringBuilder(Common.getDateOfWeek(calendar.get(Calendar.DAY_OF_WEEK)))
             .append(" ")
             .append(simpleDateFormat.format(date))
-        holder.txt_order_number!!.text = StringBuilder("Order Nunber").append(orderList[position].orderNumber)
-        holder.txt_order_comment!!.text = StringBuilder("Comment").append(orderList[position].comment)
-        holder.txt_order_status!!.text = StringBuilder("Status").append(Common.convertStatusToText(orderList[position].orderStatus))
+        holder.txt_order_number!!.text = StringBuilder("Order Nunber").append(orderModelList[position].orderNumber)
+        holder.txt_order_comment!!.text = StringBuilder("Comment").append(orderModelList[position].comment)
+        holder.txt_order_status!!.text = StringBuilder("Status").append(Common.convertStatusToText(orderModelList[position].orderStatus))
 
 
     }
