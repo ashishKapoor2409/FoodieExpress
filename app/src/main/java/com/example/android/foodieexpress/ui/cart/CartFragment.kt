@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Geocoder
 import android.location.Location
-import android.location.LocationRequest
 import android.os.Bundle
 import android.os.Looper
 import android.os.Parcelable
@@ -14,7 +13,6 @@ import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -22,7 +20,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Index
 import com.example.android.foodieexpress.Adapter.MyCartAdapter
 import com.example.android.foodieexpress.Callback.IMyButtonCallback
 import com.example.android.foodieexpress.Common.Common
@@ -34,14 +31,12 @@ import com.example.android.foodieexpress.EventBus.CountCartEvent
 import com.example.android.foodieexpress.EventBus.HideFABCart
 import com.example.android.foodieexpress.EventBus.MenuItemBack
 import com.example.android.foodieexpress.EventBus.UpdateItemInCart
-import com.example.android.foodieexpress.Model.Order
+import com.example.android.foodieexpress.Model.OrderModel
 import com.example.android.foodieexpress.R
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.material.button.MaterialButton
 import com.google.firebase.database.FirebaseDatabase
 import io.reactivex.Single
 import io.reactivex.SingleObserver
@@ -359,7 +354,7 @@ class CartFragment : Fragment() {
 
                         override fun onSuccess(totalPrice: Double) {
                             val finalPrice = totalPrice
-                            val order = Order()
+                            val order = OrderModel()
                             order.userId = Common.currentUser!!.uid!!
                             order.userName = Common.currentUser!!.name!!
                             order.userPhone = Common.currentUser!!.phone!!
@@ -390,11 +385,11 @@ class CartFragment : Fragment() {
 
     }
 
-    private fun writeOrderToFirebase(order: Order) {
+    private fun writeOrderToFirebase(orderModel: OrderModel) {
         FirebaseDatabase.getInstance()
             .getReference(Common.ORDER_REF)
             .child(Common.createOrderNumber())
-            .setValue(order)
+            .setValue(orderModel)
             .addOnFailureListener {
                 e->Toast.makeText(context!!,""+e.message,Toast.LENGTH_SHORT).show()
             }

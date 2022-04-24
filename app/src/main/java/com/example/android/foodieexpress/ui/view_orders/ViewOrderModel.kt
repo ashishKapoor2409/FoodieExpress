@@ -2,17 +2,17 @@ package com.example.android.foodieexpress.ui.view_orders
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.android.foodieexpress.Model.Order
+import com.example.android.foodieexpress.Model.OrderModel
 
 class ViewOrderModel: ViewModel() {
-    val mutableLiveDataOrderList: MutableLiveData<List<Order>>
+    val mutableLiveDataOrderModelList: MutableLiveData<List<OrderModel>>
     init {
-        mutableLiveDataOrderList = MutableLiveData()
+        mutableLiveDataOrderModelList = MutableLiveData()
     }
 
-    fun setMutableLiveDataOrderList(orderList:List<Order>)
+    fun setMutableLiveDataOrderList(orderModelList:List<OrderModel>)
     {
-        mutableLiveDataOrderList.value = orderList
+        mutableLiveDataOrderModelList.value = orderModelList
     }
 
 }
