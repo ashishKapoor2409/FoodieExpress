@@ -31,8 +31,12 @@ import com.example.android.foodieexpress.EventBus.CountCartEvent
 import com.example.android.foodieexpress.EventBus.HideFABCart
 import com.example.android.foodieexpress.EventBus.MenuItemBack
 import com.example.android.foodieexpress.EventBus.UpdateItemInCart
+import com.example.android.foodieexpress.Model.FCMResponse
+import com.example.android.foodieexpress.Model.FCMSendData
+import com.example.android.foodieexpress.Remote.IFCMService
 import com.example.android.foodieexpress.Model.OrderModel
 import com.example.android.foodieexpress.R
+import com.example.android.foodieexpress.Remote.RetrofitFCMClient
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -50,6 +54,7 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.IOException
 import java.util.*
+import kotlin.collections.HashMap
 
 class CartFragment : Fragment() {
 
@@ -63,6 +68,7 @@ class CartFragment : Fragment() {
     private lateinit var locationCallback: LocationCallback
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private lateinit var currentLocation: Location
+    lateinit var ifcmService: IFCMService
 
     var txt_empty_cart: TextView? = null
     var txt_total_price: TextView? = null
@@ -184,6 +190,8 @@ class CartFragment : Fragment() {
 
         setHasOptionsMenu(true)
         cartDataSource = LocalCartDataSource(CartDatabase.getInstance(context!!).cartDAO())
+
+        ifcmService = RetrofitFCMClient.getInstance().create(IFCMService::class.java)
         recycler_cart = root.findViewById(R.id.recycler_cart) as RecyclerView
         recycler_cart!!.setHasFixedSize(true)
         val layoutManager = LinearLayoutManager(context)
@@ -377,7 +385,8 @@ class CartFragment : Fragment() {
                         }
 
                         override fun onError(e: Throwable) {
-                            Toast.makeText(context!!,""+e.message,Toast.LENGTH_SHORT).show()
+                            if (!e.message!!.contains("Query returned empty"))
+                                Toast.makeText(context, "[SUM CART]" + e.message, Toast.LENGTH_SHORT).show()
                         }
 
                     })
@@ -403,7 +412,21 @@ class CartFragment : Fragment() {
                             }
 
                             override fun onSuccess(t: Int) {
-                                Toast.makeText(context!!,"Order Placed Successfully",Toast.LENGTH_SHORT).show()
+                                val dataSend = HashMap<String,String>()
+                                dataSend.put(Common.NOTI_TITLE,"New Order")
+                                dataSend.put(Common.NOTI_CONTENT,"You have new order"+Common.currentUser!!.phone)
+
+                                val sendData = FCMSendData(Common.getNewOrderTopic(),dataSend)
+                                compositeDisposable.add(ifcmService.sendNotification(sendData)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe({t: FCMResponse? ->
+                                        Toast.makeText(context!!,"Order Placed Successfully",Toast.LENGTH_SHORT).show()
+                                    },{t: Throwable? ->
+                                        Toast.makeText(context!!,"Order was sent but notification failed",Toast.LENGTH_SHORT).show()
+                                    })
+                                )
+
                             }
 
                             override fun onError(e: Throwable) {

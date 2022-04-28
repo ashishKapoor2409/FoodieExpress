@@ -151,6 +151,11 @@ object Common {
 
     }
 
+    fun getNewOrderTopic(): String {
+        return StringBuilder("/topics/new_order").toString()
+
+    }
+
     const val NOTI_TITLE = "title"
     const val NOTI_CONTENT = "content"
     const val TOKEN_REF = "Tokens"
