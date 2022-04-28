@@ -79,4 +79,9 @@ RecyclerView.Adapter<MyCategoriesAdapter    .MyViewHolder>(){
         }
         return super.getItemViewType(position)
     }
+
+    fun getCategoryList(): List<CategoryModel> {
+        return categoriesList
+
+    }
 }
