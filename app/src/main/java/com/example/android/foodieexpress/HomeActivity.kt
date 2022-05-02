@@ -3,8 +3,11 @@ package com.example.android.foodieexpress
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
@@ -26,7 +29,14 @@ import com.example.android.foodieexpress.EventBus.*
 import com.example.android.foodieexpress.Model.CategoryModel
 import com.example.android.foodieexpress.Model.FoodModel
 import com.example.android.foodieexpress.Model.PopularCategoriesModel
+import com.example.android.foodieexpress.Model.UserModel
 import com.example.android.foodieexpress.databinding.ActivityHomeBinding
+import com.google.android.gms.common.api.Status
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -41,6 +51,8 @@ import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.util.*
+import kotlin.collections.HashMap
 
 class HomeActivity : AppCompatActivity() {
 
@@ -51,6 +63,14 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var navController:NavController
     private var drawer: DrawerLayout? =null
     private var dialog: AlertDialog? = null
+
+    private var placeSelected: Place? = null
+    private lateinit var places_fragment: AutocompleteSupportFragment
+    private lateinit var placeClient: PlacesClient
+
+    private val placeFields = Arrays.asList(Place.Field.ID,
+        Place.Field.NAME,
+        Place.Field.LAT_LNG)
 
     private var menuItemClick = -1
 
@@ -114,6 +134,10 @@ class HomeActivity : AppCompatActivity() {
                     if(menuItemClick != item.itemId)
                         navController.navigate(R.id.nav_view_order)
                 }
+                else if(item.itemId == R.id.nav_update_info) {
+                    showUpdateInfoDialog()
+
+                }
 
                 menuItemClick = item!!.itemId
 
@@ -121,7 +145,88 @@ class HomeActivity : AppCompatActivity() {
             }
 
         })
+        initPlacesClient()
         countCartItem()
+    }
+
+    private fun initPlacesClient() {
+        Places.initialize(this,getString(R.string.google_maps_key))
+        placeClient = Places.createClient(this)
+    }
+
+    private fun showUpdateInfoDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("REGISTER")
+        builder.setMessage("Please fill message")
+
+        val itemView = LayoutInflater.from(this@HomeActivity)
+            .inflate(R.layout.layout_register, null)
+
+        val edit_name = itemView.findViewById<EditText>(R.id.edit_name)
+        val edit_phone = itemView.findViewById<EditText>(R.id.edit_phone)
+        val txt_address = itemView.findViewById<TextView>(R.id.txt_address_detail)
+
+        places_fragment = supportFragmentManager.findFragmentById(R.id.places_autocomplete_fragment) as AutocompleteSupportFragment
+
+        places_fragment.setPlaceFields(placeFields)
+        places_fragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+            override fun onError(p0: Status) {
+                Toast.makeText(this@HomeActivity,""+p0.statusMessage, Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onPlaceSelected(p0: Place) {
+                placeSelected = p0
+                txt_address.setText(placeSelected!!.address)
+            }
+
+        })
+
+        edit_phone.setText(Common.currentUser!!.phone)
+        txt_address.setText(Common.currentUser!!.address)
+            edit_name.setText(Common.currentUser!!.name)
+
+        builder.setView(itemView)
+        builder.setNegativeButton("CANCEL") { dialogInterface, i -> dialogInterface.dismiss() }
+        builder.setPositiveButton("UPDATE") { dialogInterface, i ->
+            if(placeSelected != null) {
+                if (TextUtils.isDigitsOnly(edit_name.text.toString())) {
+                    Toast.makeText(this@HomeActivity, "Please enter your name", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                val update_data = HashMap<String,Any>()
+                update_data.put("name",edit_name.text.toString())
+                update_data.put("address",txt_address.text.toString())
+                update_data.put("lat",placeSelected!!.latLng.latitude)
+                update_data.put("lng",placeSelected!!.latLng.longitude)
+
+                FirebaseDatabase.getInstance()
+                    .getReference(Common.USER_REFERENCE)
+                    .child(Common.currentUser!!.uid!!)
+                    .updateChildren(update_data)
+                    .addOnFailureListener {
+                        Toast.makeText(this@HomeActivity,it.message,Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnSuccessListener {
+                        Common.currentUser!!.name = update_data["name"].toString()
+                        Common.currentUser!!.address = update_data["address"].toString()
+                        Common.currentUser!!.lat = update_data["lat"].toString().toDouble()
+                        Common.currentUser!!.lng = update_data["lng"].toString().toDouble()
+
+                        Toast.makeText(this@HomeActivity,"Update  Info Success",Toast.LENGTH_SHORT).show()
+                    }
+            }
+            else {
+                Toast.makeText(this@HomeActivity,"Please select address",Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        val dialog = builder.create()
+        dialog.setOnDismissListener {
+            val fragmentTransaction = supportFragmentManager.beginTransaction()
+            fragmentTransaction.remove(places_fragment!!)
+            fragmentTransaction.commit()
+        }
+        dialog.show()
     }
 
     private fun signOut() {

@@ -37,10 +37,16 @@ import com.example.android.foodieexpress.Remote.IFCMService
 import com.example.android.foodieexpress.Model.OrderModel
 import com.example.android.foodieexpress.R
 import com.example.android.foodieexpress.Remote.RetrofitFCMClient
+import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.firebase.database.FirebaseDatabase
 import io.reactivex.Single
 import io.reactivex.SingleObserver
@@ -75,6 +81,15 @@ class CartFragment : Fragment() {
     var group_place_holder: CardView? = null
     var recycler_cart: RecyclerView? = null
     var adapter: MyCartAdapter? = null
+
+    private var placeSelected: Place? = null
+    private lateinit var places_fragment: AutocompleteSupportFragment
+    private lateinit var placeClient: PlacesClient
+
+    private val placeFields = Arrays.asList(
+        Place.Field.ID,
+        Place.Field.NAME,
+        Place.Field.LAT_LNG)
 
     val requestPermissionLauncher =
         registerForActivityResult(
@@ -187,6 +202,7 @@ class CartFragment : Fragment() {
     }
 
     private fun initViews(root: View) {
+        initPlacesClient()
 
         setHasOptionsMenu(true)
         cartDataSource = LocalCartDataSource(CartDatabase.getInstance(context!!).cartDAO())
@@ -255,7 +271,6 @@ class CartFragment : Fragment() {
             val builder = AlertDialog.Builder(context!!)
             builder.setTitle("One more step!!")
             val view = LayoutInflater.from(context).inflate(R.layout.layout_place_order, null)
-            val edt_address = view.findViewById<View>(R.id.edt_address) as EditText
             val edt_comment = view.findViewById<View>(R.id.edt_comment) as EditText
             val txt_address = view.findViewById<View>(R.id.txt_address_detail) as TextView
             val rdi_home = view.findViewById<View>(R.id.rdi_home_address) as RadioButton
@@ -264,20 +279,31 @@ class CartFragment : Fragment() {
             val rdi_cod = view.findViewById<View>(R.id.rdi_cod) as RadioButton
             val rdi_braintree = view.findViewById<View>(R.id.rdi_braintree) as RadioButton
 
-            edt_address.setText(Common.currentUser!!.address)
+            places_fragment = activity!!.supportFragmentManager.findFragmentById(R.id.places_autocomplete_fragment) as AutocompleteSupportFragment
+            places_fragment.setPlaceFields(placeFields)
+            places_fragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+                override fun onError(p0: Status) {
+                    Toast.makeText(context,""+p0.statusMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onPlaceSelected(p0: Place) {
+                    placeSelected = p0
+                    txt_address.setText(placeSelected!!.address)
+                }
+
+            })
+
+            txt_address.setText(Common.currentUser!!.address)
 
             rdi_home.setOnCheckedChangeListener { compundButton, b ->
                 if (b) {
-                    edt_address.setText(Common.currentUser!!.address)
-                    txt_address.visibility = View.GONE
+                    txt_address.setText(Common.currentUser!!.address)
                 }
             }
 
             rdi_other_address.setOnCheckedChangeListener { compundButton, b ->
                 if (b) {
-                    edt_address.setText("")
-                    edt_address.setHint("Enter your address")
-                    txt_address.visibility = View.GONE
+                    txt_address.setText("")
                 }
             }
 
@@ -307,14 +333,12 @@ class CartFragment : Fragment() {
                                     DisposableSingleObserver<Any>() {
 
                                     override fun onError(e: Throwable) {
-                                        edt_address.setText(coordinates )
-                                        txt_address.visibility = View.VISIBLE
+
                                         txt_address.setText(e.message!!)
                                     }
 
                                     override fun onSuccess(t: Any) {
-                                        edt_address.setText(coordinates )
-                                        txt_address.visibility = View.VISIBLE
+
                                         txt_address.setText(t.toString())
                                     }
 
@@ -335,7 +359,7 @@ class CartFragment : Fragment() {
             builder.setNegativeButton("NO", {dialogInterface,_ ->dialogInterface.dismiss() })
                 .setPositiveButton("YES",{dialogInterface,_->
                     if(rdi_cod.isChecked)
-                        paymentCOD(edt_address.text.toString(),edt_comment.text.toString())
+                        paymentCOD(txt_address.text.toString(),edt_comment.text.toString())
                 })
 
             val dialog = builder.create()
@@ -345,6 +369,11 @@ class CartFragment : Fragment() {
         }
 
 
+    }
+
+    private fun initPlacesClient() {
+        Places.initialize(context,getString(R.string.google_maps_key))
+        placeClient = Places.createClient(context)
     }
 
     private fun paymentCOD(address: String, comment: String) {
