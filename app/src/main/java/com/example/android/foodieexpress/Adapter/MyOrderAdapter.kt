@@ -16,7 +16,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MyOrderAdapter(private val context: Context,
-private val orderModelList:List<OrderModel>) :
+private val orderModelList:MutableList<OrderModel>) :
 RecyclerView.Adapter<MyOrderAdapter.MyViewHolder>(){
 
 
@@ -48,6 +48,14 @@ RecyclerView.Adapter<MyOrderAdapter.MyViewHolder>(){
 
     override fun getItemCount(): Int {
         return orderModelList.size
+    }
+
+    fun getItemAtPosition(position:Int):OrderModel {
+            return orderModelList[position]
+    }
+
+    fun setItemAtPosition(position: Int,orderModel: OrderModel) {
+        orderModelList[position] = orderModel
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
