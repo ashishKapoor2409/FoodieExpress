@@ -23,5 +23,5 @@
     <string name="sign_out">Sign Out</string>
     <string name="menu_view_order">View Orders</string>
     <string name="update_info">Update Info</string>
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyAOLaCCZMk0x7NCEkrIKZ70D_HcIP0jsRY</string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false"></string>
 </resources>
